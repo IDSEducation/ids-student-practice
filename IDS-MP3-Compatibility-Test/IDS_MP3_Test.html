@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDS MP3 Compatibility Test</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4f8fb;color:#203443;margin:0}
+main{max-width:720px;margin:28px auto;padding:14px}
+.card{background:#fff;border:1px solid #d8e4ec;border-radius:18px;padding:20px;box-shadow:0 12px 28px rgba(26,61,86,.10)}
+h1{margin-top:0}.note{color:#657989;line-height:1.6}
+audio{width:100%;margin:14px 0}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+button{border:0;border-radius:11px;padding:11px 15px;font-weight:800;cursor:pointer}
+.primary{background:#25865b;color:#fff}.secondary{background:#e9f1f6;color:#23475e}
+.status{margin-top:14px;background:#f1f5f8;padding:12px;border-radius:10px;white-space:pre-wrap}
+.warn{margin-top:12px;background:#fff7df;border:1px solid #efd991;color:#705718;border-radius:10px;padding:10px 12px}
+code{word-break:break-all}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<h1>IDS MP3 Compatibility Test</h1>
+<p class="note">用途：測試同一支 MP3 是否能在 Android Chrome、iPhone Safari、Android LINE、iPhone LINE 穩定播放。</p>
+
+<audio id="player" controls preload="metadata">
+  <source src="audio/ids-test.mp3" type="audio/mpeg">
+  Your browser does not support HTML5 audio.
+</audio>
+
+<div class="row">
+<button class="primary" id="play">▶ Play MP3</button>
+<button class="secondary" id="pause">⏸ Pause</button>
+<button class="secondary" id="replay">↻ Replay</button>
+</div>
+
+<div class="warn">
+這支測試音檔是 4 秒測試音，不是英文人聲。只要能清楚聽到「嗶——」聲，就代表 MP3 播放鏈路本身成功。
+</div>
+
+<div id="status" class="status">等待測試…</div>
+</div>
+</main>
+
+<script>
+const p=document.getElementById("player"),s=document.getElementById("status");
+function report(extra=""){
+  const info=[
+    "audio.canPlayType(mp3): "+p.canPlayType("audio/mpeg"),
+    "readyState: "+p.readyState,
+    "networkState: "+p.networkState,
+    "currentTime: "+p.currentTime.toFixed(2),
+    "paused: "+p.paused,
+    extra
+  ].filter(Boolean).join("\n");
+  s.textContent=info;
+}
+document.getElementById("play").onclick=async()=>{
+  try{
+    await p.play();
+    report("✓ play() 成功");
+  }catch(e){
+    report("✗ play() 失敗: "+e.name+" / "+e.message);
+  }
+};
+document.getElementById("pause").onclick=()=>{p.pause();report("已暫停")};
+document.getElementById("replay").onclick=async()=>{
+  try{
+    p.currentTime=0;
+    await p.play();
+    report("✓ replay 成功");
+  }catch(e){
+    report("✗ replay 失敗: "+e.name+" / "+e.message);
+  }
+};
+p.addEventListener("loadedmetadata",()=>report("metadata loaded"));
+p.addEventListener("canplay",()=>report("canplay"));
+p.addEventListener("playing",()=>report("✓ playing event"));
+p.addEventListener("error",()=>report("✗ audio error code: "+(p.error?.code||"unknown")));
+report();
+</script>
+</body>
+</html>
